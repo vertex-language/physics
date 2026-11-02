@@ -55,7 +55,7 @@ public final class Controller {
     }
 
     /// Place puts it somewhere, standing still.
-    public func Place(_ p: geom.Vec3, velocity: geom.Vec3 = geom.Vec3.Zero) {
+    public func Place(p: geom.Vec3, velocity: geom.Vec3 = geom.Vec3.Zero) {
         Position = p
         Velocity = velocity
         Grounded = false
@@ -66,7 +66,7 @@ public final class Controller {
     /// Move advances it by dt seconds: towards the horizontal velocity
     /// `wish`, jumping if asked and it's on the ground, through the
     /// colliders.
-    public func Move(_ dt: float32, wish: geom.Vec3, jump: bool, colliders: [collide.Collider]) {
+    public func Move(dt: float32, wish: geom.Vec3, jump: bool, colliders: [collide.Collider]) {
         Landed = 0
         Jumped = false
         var left = math.Min(dt, 0.1)
@@ -77,7 +77,7 @@ public final class Controller {
         }
     }
 
-    func tick(_ h: float32, _ wish: geom.Vec3, _ jump: bool, _ colliders: [collide.Collider]) {
+    func tick(h: float32, wish: geom.Vec3, jump: bool, colliders: [collide.Collider]) {
         let was = Grounded
         if Grounded && jump {
             Velocity.Y = JumpSpeed
@@ -122,7 +122,7 @@ public final class Controller {
 
     // resolve pushes the capsule out of what it overlaps and takes away
     // the velocity into it.
-    func resolve(_ colliders: [collide.Collider]) {
+    func resolve(colliders: [collide.Collider]) {
         let walkable = math.Cos(MaxSlope)
         for _ in 0..<4 {
             var moved = false
@@ -148,7 +148,7 @@ public final class Controller {
 
     // snap keeps it on the ground over small drops: if there's walkable
     // ground within SnapDistance below, it moves down onto it.
-    func snap(_ colliders: [collide.Collider]) {
+    func snap(colliders: [collide.Collider]) {
         let walkable = math.Cos(MaxSlope)
         let me = Collider
         let probe = geom.Transform(position: me.Transform.Position - geom.Vec3(0, SnapDistance, 0))

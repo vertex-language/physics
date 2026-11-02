@@ -70,7 +70,7 @@ public final class Body {
     var index = -1
 
     /// A body of `mass` kilograms (ignored unless dynamic), placed at `at`.
-    public init(_ kind: BodyKind, _ shape: collide.Shape, mass: float32 = 1, at t: geom.Transform = geom.Transform.Identity,
+    public init(kind: BodyKind, shape: collide.Shape, mass: float32 = 1, at t: geom.Transform = geom.Transform.Identity,
                 name: string = "") {
         Kind = kind
         Shape = shape
@@ -81,7 +81,7 @@ public final class Body {
     }
 
     /// SetMass sets the mass, and the inertia of the shape solid at that mass.
-    public func SetMass(_ m: float32) {
+    public func SetMass(m: float32) {
         if Kind != .dynamic || m <= 0 {
             Mass = 0
             invMass = 0
@@ -107,13 +107,13 @@ public final class Body {
     public var Dynamic: bool { return Kind == .dynamic && invMass > 0 }
 
     /// VelocityAt is the velocity of the body's point p (in the world).
-    public func VelocityAt(_ p: geom.Vec3) -> geom.Vec3 {
+    public func VelocityAt(p: geom.Vec3) -> geom.Vec3 {
         return Velocity + AngularVelocity.Cross(p - Position)
     }
 
     /// ApplyImpulse changes the velocities as an impulse j (kg·m/s) at
     /// point p would.
-    public func ApplyImpulse(_ j: geom.Vec3, at p: geom.Vec3) {
+    public func ApplyImpulse(j: geom.Vec3, at p: geom.Vec3) {
         if !Dynamic { return }
         Velocity += j * invMass
         AngularVelocity += inverseInertia((p - Position).Cross(j))
@@ -132,7 +132,7 @@ public final class Body {
     // It is R·diag(invInertia)·Rᵀ, kept while the rotation stays: the
     // solver asks it several times a constraint, and two quaternion
     // rotations a time cost more than everything else in a step.
-    func inverseInertia(_ v: geom.Vec3) -> geom.Vec3 {
+    func inverseInertia(v: geom.Vec3) -> geom.Vec3 {
         let q = Rotation
         if q.X != iiFor.X || q.Y != iiFor.Y || q.Z != iiFor.Z || q.W != iiFor.W { worldInertia() }
         return geom.Vec3(ii0.X * v.X + ii0.Y * v.Y + ii0.Z * v.Z,
@@ -162,7 +162,7 @@ public final class Body {
 
     // rotate turns the body by a small rotation vector (radians about an
     // axis, as an angular velocity times a time).
-    func rotate(_ w: geom.Vec3) {
+    func rotate(w: geom.Vec3) {
         let dq = geom.Quat(w.X, w.Y, w.Z, 0) * Rotation
         Rotation = geom.Quat(Rotation.X + 0.5 * dq.X, Rotation.Y + 0.5 * dq.Y, Rotation.Z + 0.5 * dq.Z,
                              Rotation.W + 0.5 * dq.W).Normalized()
@@ -170,13 +170,13 @@ public final class Body {
 
     // weight is the generalized inverse mass for a push along n at offset r
     // from the center.
-    func weight(_ r: geom.Vec3, _ n: geom.Vec3) -> float32 {
+    func weight(r: geom.Vec3, n: geom.Vec3) -> float32 {
         if !Dynamic { return 0 }
         let rn = r.Cross(n)
         return invMass + rn.Dot(inverseInertia(rn))
     }
 
-    func angularWeight(_ n: geom.Vec3) -> float32 {
+    func angularWeight(n: geom.Vec3) -> float32 {
         if !Dynamic { return 0 }
         return n.Dot(inverseInertia(n))
     }
@@ -186,8 +186,8 @@ public final class Body {
 
 // positional moves a's point (offset ra) by d and b's (offset rb) against
 // it, shared by their inverse masses; answers the multiplier λ.
-func positional(_ a: Body, _ b: Body, _ d: geom.Vec3, _ ra: geom.Vec3, _ rb: geom.Vec3,
-                _ compliance: float32, _ h: float32) -> float32 {
+func positional(a: Body, b: Body, d: geom.Vec3, ra: geom.Vec3, rb: geom.Vec3,
+                compliance: float32, h: float32) -> float32 {
     let c = d.Length()
     if c < 1e-9 { return 0 }
     let n = d / c
@@ -208,7 +208,7 @@ func positional(_ a: Body, _ b: Body, _ d: geom.Vec3, _ ra: geom.Vec3, _ rb: geo
 
 // angular turns a by the rotation vector dphi and b against it, shared by
 // their inverse inertias.
-func angular(_ a: Body, _ b: Body, _ dphi: geom.Vec3, _ compliance: float32, _ h: float32) {
+func angular(a: Body, b: Body, dphi: geom.Vec3, compliance: float32, h: float32) {
     let theta = dphi.Length()
     if theta < 1e-9 { return }
     let n = dphi / theta
@@ -221,7 +221,7 @@ func angular(_ a: Body, _ b: Body, _ dphi: geom.Vec3, _ compliance: float32, _ h
 
 // impulse changes the relative velocity of a's point (ra) against b's
 // (rb) by dv.
-func impulse(_ a: Body, _ b: Body, _ dv: geom.Vec3, _ ra: geom.Vec3, _ rb: geom.Vec3) {
+func impulse(a: Body, b: Body, dv: geom.Vec3, ra: geom.Vec3, rb: geom.Vec3) {
     let m = dv.Length()
     if m < 1e-9 { return }
     let n = dv / m
@@ -240,7 +240,7 @@ func impulse(_ a: Body, _ b: Body, _ dv: geom.Vec3, _ ra: geom.Vec3, _ rb: geom.
 
 // rotationVector is the small rotation vector of a unit quaternion: its
 // axis times its angle, the shorter way round.
-func rotationVector(_ q: geom.Quat) -> geom.Vec3 {
+func rotationVector(q: geom.Quat) -> geom.Vec3 {
     let s: float32 = q.W < 0 ? -1 : 1
     let v = geom.Vec3(q.X * s, q.Y * s, q.Z * s)
     let sinHalf = v.Length()

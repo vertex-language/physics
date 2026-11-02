@@ -16,12 +16,12 @@ import (
 
 var failures = 0
 
-func check(_ ok: bool, _ what: string) {
+func check(ok: bool, what: string) {
     print(ok ? "ok    \(what)" : "FAIL  \(what)")
     if !ok { failures += 1 }
 }
 
-func near(_ a: float32, _ b: float32) -> bool { return math.Abs(a - b) < 0.001 }
+func near(a: float32, b: float32) -> bool { return math.Abs(a - b) < 0.001 }
 
 func main() -> int32 {
     // A floor at y = 0 and a wall at x = 3, for y 1 and 2.
@@ -73,7 +73,7 @@ func main() -> int32 {
     return failures == 0 ? 0 : 1
 }
 
-func nearv(_ a: geom.Vec3, _ b: geom.Vec3, _ eps: float32 = 0.01) -> bool {
+func nearv(a: geom.Vec3, b: geom.Vec3, eps: float32 = 0.01) -> bool {
     return math.Abs(a.X - b.X) < eps && math.Abs(a.Y - b.Y) < eps && math.Abs(a.Z - b.Z) < eps
 }
 

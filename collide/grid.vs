@@ -36,7 +36,7 @@ public let Gap: float32 = 0.0001
 /// `solid` says so, sliding along what it hits: Y first, then X, then Z,
 /// each clipped on its own. A box that starts overlapping a solid cell
 /// isn't pushed out; it just doesn't get further in.
-public func MoveBox(_ box: geom.AABB, by motion: geom.Vec3, solid: (geom.IVec3) -> bool) -> Move {
+public func MoveBox(box: geom.AABB, by motion: geom.Vec3, solid: (geom.IVec3) -> bool) -> Move {
     var b = box
     var moved = geom.Vec3.Zero
     let dy = sweep(b, axis: 1, motion.Y, solid)
@@ -54,7 +54,7 @@ public func MoveBox(_ box: geom.AABB, by motion: geom.Vec3, solid: (geom.IVec3) 
 }
 
 /// Overlaps is whether the box overlaps any solid cell.
-public func Overlaps(_ box: geom.AABB, solid: (geom.IVec3) -> bool) -> bool {
+public func Overlaps(box: geom.AABB, solid: (geom.IVec3) -> bool) -> bool {
     let cells = box.Cells()
     var y = cells.lo.Y
     while y < cells.hi.Y {
@@ -73,7 +73,7 @@ public func Overlaps(_ box: geom.AABB, solid: (geom.IVec3) -> bool) -> bool {
 }
 
 // sweep is how far the box can move by `d` along `axis` (0 X, 1 Y, 2 Z).
-func sweep(_ b: geom.AABB, axis: int, _ d: float32, _ solid: (geom.IVec3) -> bool) -> float32 {
+func sweep(b: geom.AABB, axis: int, d: float32, solid: (geom.IVec3) -> bool) -> float32 {
     if d == 0 { return 0 }
     // The cells the box covers across the other two axes, shrunk a hair
     // so a box flush against a wall doesn't count the wall's cells.
@@ -107,7 +107,7 @@ func sweep(_ b: geom.AABB, axis: int, _ d: float32, _ solid: (geom.IVec3) -> boo
     return d
 }
 
-@inlinable func component(_ v: geom.Vec3, _ axis: int) -> float32 {
+@inlinable func component(v: geom.Vec3, axis: int) -> float32 {
     switch axis {
     case 0: return v.X
     case 1: return v.Y
@@ -115,7 +115,7 @@ func sweep(_ b: geom.AABB, axis: int, _ d: float32, _ solid: (geom.IVec3) -> boo
     }
 }
 
-func compose(_ axis: int, _ a: int32, _ axis1: int, _ b: int32, _ axis2: int, _ c: int32) -> geom.IVec3 {
+func compose(axis: int, a: int32, axis1: int, b: int32, axis2: int, c: int32) -> geom.IVec3 {
     var v = geom.IVec3.Zero
     for (ax, value) in [(axis, a), (axis1, b), (axis2, c)] {
         switch ax {

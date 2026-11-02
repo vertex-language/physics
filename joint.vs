@@ -81,7 +81,7 @@ public final class Joint {
 
     /// A joint between a and b at `frame`, a place in the world, taken as
     /// each body's frame from where they are now.
-    public init(_ kind: JointKind, _ a: Body, _ b: Body, at frame: geom.Transform) {
+    public init(kind: JointKind, a: Body, b: Body, at frame: geom.Transform) {
         Kind = kind
         A = a
         B = b
@@ -102,7 +102,7 @@ public final class Joint {
     }
 
     // solve corrects positions and rotations for one substep.
-    func solve(_ h: float32) {
+    func solve(h: float32) {
         // Keep the turn within bounds first, then the anchors together,
         // so what's left over is a little angle rather than a gap.
         let r = Relative
@@ -127,7 +127,7 @@ public final class Joint {
 
     // correct turns the bodies so B's frame, now at r in A's, moves to
     // target (with give).
-    func correct(_ r: geom.Quat, _ target: geom.Quat, _ compliance: float32, _ h: float32) {
+    func correct(r: geom.Quat, target: geom.Quat, compliance: float32, h: float32) {
         let fix = (target * r.Conjugate()).Normalized()
         if math.Abs(fix.W) > 0.9999999 { return }
         // That turn, in the world: about A's frame.
@@ -139,7 +139,7 @@ public final class Joint {
     }
 
     // damp slows the relative spin.
-    func damp(_ h: float32) {
+    func damp(h: float32) {
         if Damping <= 0 { return }
         let rel = B.AngularVelocity - A.AngularVelocity
         let k = math.Min(Damping * h, 1)
@@ -156,14 +156,14 @@ public final class Joint {
 }
 
 // twistAngle is the signed angle of a rotation about one axis (0 X, 1 Y).
-func twistAngle(_ q: geom.Quat, axis: int) -> float32 {
+func twistAngle(q: geom.Quat, axis: int) -> float32 {
     let c = axis == 0 ? q.X : (axis == 1 ? q.Y : q.Z)
     let s: float32 = q.W < 0 ? -1 : 1
     return 2 * math.Atan2(c * s, q.W * s)
 }
 
 // clamp brings a relative rotation within a ball joint's limits.
-func clamp(_ r: geom.Quat, _ l: Limits) -> geom.Quat {
+func clamp(r: geom.Quat, l: Limits) -> geom.Quat {
     let st = r.SwingTwist(geom.Vec3.UnitY)
     let twist = math.Clamp(twistAngle(st.twist, axis: 1), l.TwistMin, l.TwistMax)
     // The swing as a rotation vector, which has no Y part.

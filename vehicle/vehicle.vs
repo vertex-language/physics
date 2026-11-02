@@ -53,7 +53,7 @@ public struct Hit {
 
 /// Flat is ground: the plane Y = 0, asphalt everywhere. A Ground for
 /// tests and empty lots.
-public func Flat(_ from: geom.Vec3, _ dir: geom.Vec3, _ length: float32) -> Hit? {
+public func Flat(from: geom.Vec3, dir: geom.Vec3, length: float32) -> Hit? {
     if dir.Y >= -1e-4 { return nil }
     let t = -from.Y / dir.Y
     if t < 0 || t > length { return nil }
@@ -80,7 +80,7 @@ public struct WheelSpec {
     /// Grip relative to the tire's (rear tires a little wider).
     public var Grip: float32 = 1
 
-    public init(_ position: geom.Vec3) { Position = position }
+    public init(position: geom.Vec3) { Position = position }
 }
 
 /// Spec is a car's build: body, wheels, engine, gears, tires, aero.
@@ -197,7 +197,7 @@ public struct Wheel {
     /// The ground under it, when touching.
     public var Ground: Hit? = nil
 
-    init(_ s: WheelSpec) { Spec = s }
+    init(s: WheelSpec) { Spec = s }
 
     /// Skid is how much it's sliding, 0…1, for screeches and marks.
     public var Skid: float32 {
@@ -233,7 +233,7 @@ public final class Car {
     let invInertia: geom.Vec3
     var gearWant = 1
 
-    public init(_ spec: Spec, at position: geom.Vec3, yaw: float32 = 0) {
+    public init(spec: Spec, at position: geom.Vec3, yaw: float32 = 0) {
         Spec = spec
         Position = position
         Rotation = geom.AxisAngle(geom.Vec3.UnitY, yaw)
@@ -275,14 +275,14 @@ public final class Car {
 
     /// WheelMatrix places wheel i: at its hub, steered, rolled. A wheel
     /// mesh centered on its hub with its axle along X goes here.
-    public func WheelMatrix(_ i: int) -> geom.Mat4 {
+    public func WheelMatrix(i: int) -> geom.Mat4 {
         let w = Wheels[i]
         let hub = w.Spec.Position + geom.Vec3(0, w.Compression, 0)
         return Matrix * geom.Translation(hub) * geom.RotationY(w.Steer) * geom.RotationX(w.Angle)
     }
 
     /// Hub is wheel i's center in the car's frame (the spring's length now).
-    public func Hub(_ i: int) -> geom.Vec3 {
+    public func Hub(i: int) -> geom.Vec3 {
         let w = Wheels[i]
         return w.Spec.Position + geom.Vec3(0, w.Compression, 0)
     }
@@ -302,7 +302,7 @@ public final class Car {
     }
 
     /// Place puts the car at rest at a point, heading yaw.
-    public func Place(_ p: geom.Vec3, yaw: float32) {
+    public func Place(p: geom.Vec3, yaw: float32) {
         Position = p
         Rotation = geom.AxisAngle(geom.Vec3.UnitY, yaw)
         Velocity = geom.Vec3.Zero
@@ -326,7 +326,7 @@ public final class Car {
     // ---- the engine ----
 
     /// EngineTorque is the torque at full throttle at an rpm, N·m.
-    public func EngineTorque(_ rpm: float32) -> float32 {
+    public func EngineTorque(rpm: float32) -> float32 {
         let t = Spec.Torque
         if t.isEmpty { return 0 }
         let f = math.Clamp((rpm - Spec.Idle) / (Spec.Redline - Spec.Idle), 0, 1) * float32(t.count - 1)
@@ -336,7 +336,7 @@ public final class Car {
         return t[i] + (t[i + 1] - t[i]) * k
     }
 
-    func ratio(_ gear: int) -> float32 {
+    func ratio(gear: int) -> float32 {
         if gear > 0 { return Spec.Gears[min(gear, Spec.Gears.count) - 1] * Spec.FinalDrive }
         if gear < 0 { return -Spec.Reverse * Spec.FinalDrive }
         return 0
@@ -345,7 +345,7 @@ public final class Car {
     // ---- stepping ----
 
     /// Step moves the car on by dt seconds with these controls.
-    public func Step(_ dt: float32, _ c: Controls) {
+    public func Step(dt: float32, c: Controls) {
         Input = c
         let n = max(1, Spec.Substeps)
         let h = dt / float32(n)
@@ -371,7 +371,7 @@ public final class Car {
     // gearbox picks the gear: up near the redline, down when it lugs,
     // reverse when stopped and braking with no throttle; and works out
     // the rpm from the driven wheels.
-    func gearbox(_ dt: float32, _ c: Controls) {
+    func gearbox(dt: float32, c: Controls) {
         let v = ForwardSpeed
         settled += dt
         if Shifting > 0 {
@@ -381,7 +381,7 @@ public final class Car {
         // Shifts go by the road's speed through the gears, not the tires'
         // (a spinning inside wheel mid-corner isn't a reason to shift).
         let radius = Wheels.isEmpty ? 0.34 : Wheels[Wheels.count - 1].Spec.Radius
-        func road(_ g: int) -> float32 { return math.Abs(v / radius * ratio(g)) * 60 / (2 * float32(math.Pi)) }
+        func road(g: int) -> float32 { return math.Abs(v / radius * ratio(g)) * 60 / (2 * float32(math.Pi)) }
         if Shifting <= 0 && settled > 0.7 {
             if Gear > 0 {
                 if c.Brake > 0.2 && c.Throttle < 0.05 && v < 0.6 && v > -0.5 { shift(-1) }
@@ -414,7 +414,7 @@ public final class Car {
         Load += (c.Throttle - Load) * math.Min(1, dt * 10)
     }
 
-    func shift(_ to: int) {
+    func shift(to: int) {
         if to == Gear { return }
         gearWant = to
         Gear = 0
@@ -422,7 +422,7 @@ public final class Car {
         settled = 0
     }
 
-    func substep(_ h: float32, _ c: Controls) {
+    func substep(h: float32, c: Controls) {
         let m = Spec.Mass
         var force = geom.Vec3(0, -9.81 * m, 0)
         var torque = geom.Vec3.Zero
@@ -639,12 +639,12 @@ public final class Car {
     var invMass: float32 { return 1 / Spec.Mass }
 
     // invInertiaWorld is the inverse inertia applied to a world vector.
-    func invInertiaWorld(_ v: geom.Vec3) -> geom.Vec3 {
+    func invInertiaWorld(v: geom.Vec3) -> geom.Vec3 {
         let l = Rotation.Conjugate().Rotate(v)
         return Rotation.Rotate(geom.Vec3(l.X * invInertia.X, l.Y * invInertia.Y, l.Z * invInertia.Z))
     }
 
-    func apply(_ j: geom.Vec3, at rr: geom.Vec3) {
+    func apply(j: geom.Vec3, at rr: geom.Vec3) {
         Velocity = Velocity + j * invMass
         AngularVelocity = AngularVelocity + invInertiaWorld(rr.Cross(j))
     }
@@ -655,7 +655,7 @@ public final class Car {
 /// trades the impulse between them. Answers the impulse's size (0 when
 /// they didn't touch), for sounds.
 @discardableResult
-public func Collide(_ a: Car, _ b: Car, restitution: float32 = 0.25, friction: float32 = 0.3) -> float32 {
+public func Collide(a: Car, b: Car, restitution: float32 = 0.25, friction: float32 = 0.3) -> float32 {
     guard let c = overlap(a, b) else { return 0 }
     let (n, depth, p) = c
     // Apart, each by its share of the mass.
@@ -685,16 +685,16 @@ public func Collide(_ a: Car, _ b: Car, restitution: float32 = 0.25, friction: f
 
 // overlap is two cars' boxes as rectangles on the ground: the way from a
 // to b to push them apart, how far, and a point where they touch.
-func overlap(_ a: Car, _ b: Car) -> (geom.Vec3, float32, geom.Vec3)? {
+func overlap(a: Car, b: Car) -> (geom.Vec3, float32, geom.Vec3)? {
     let ca = a.Position + a.Rotation.Rotate(a.Spec.BoxCenter), cb = b.Position + b.Rotation.Rotate(b.Spec.BoxCenter)
     if (cb - ca).Length() > a.Spec.HalfExtents.Length() + b.Spec.HalfExtents.Length() { return nil }
     if math.Abs(cb.Y - ca.Y) > a.Spec.HalfExtents.Y + b.Spec.HalfExtents.Y { return nil }
-    func flat(_ v: geom.Vec3) -> geom.Vec3 {
+    func flat(v: geom.Vec3) -> geom.Vec3 {
         let f = geom.Vec3(v.X, 0, v.Z)
         return f.Length() > 1e-5 ? f.Normalized() : geom.Vec3.UnitX
     }
     let axes = [flat(a.Forward), flat(a.Left), flat(b.Forward), flat(b.Left)]
-    func extent(_ c: Car, _ axis: geom.Vec3) -> float32 {
+    func extent(c: Car, axis: geom.Vec3) -> float32 {
         let h = c.Spec.HalfExtents
         return math.Abs(flat(c.Left).Dot(axis)) * h.X + math.Abs(flat(c.Forward).Dot(axis)) * h.Z
     }
@@ -717,7 +717,7 @@ func overlap(_ a: Car, _ b: Car) -> (geom.Vec3, float32, geom.Vec3)? {
 
 // slipCurve is a tire's grip at a slip (in units of where it peaks):
 // rising through 1 at the peak, then easing to `hold` of it, sign kept.
-func slipCurve(_ s: float32, _ hold: float32) -> float32 {
+func slipCurve(s: float32, hold: float32) -> float32 {
     let a = math.Abs(s)
     var g: float32
     if a < 1 {

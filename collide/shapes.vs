@@ -48,7 +48,7 @@ public struct Collider {
     public var Shape: Shape
     public var Transform: geom.Transform
 
-    public init(_ shape: Shape, _ transform: geom.Transform = geom.Transform.Identity) {
+    public init(shape: Shape, transform: geom.Transform = geom.Transform.Identity) {
         self.Shape = shape
         self.Transform = transform
     }
@@ -70,7 +70,7 @@ public struct Contact {
 /// apart (or closer than `margin` apart, which counts as touching), up to
 /// four for a box resting on a plane. Box against box isn't handled yet
 /// and gives none.
-public func Collide(_ a: Shape, _ ta: geom.Transform, _ b: Shape, _ tb: geom.Transform, margin: float32 = 0) -> [Contact] {
+public func Collide(a: Shape, ta: geom.Transform, b: Shape, tb: geom.Transform, margin: float32 = 0) -> [Contact] {
     // Ground first, outside the switch (a tuple switch over shapes that
     // carry a field doesn't lower yet: vsc_TODO #78).
     if a.isField || b.isField {
@@ -115,7 +115,7 @@ public func Collide(_ a: Shape, _ ta: geom.Transform, _ b: Shape, _ tb: geom.Tra
 }
 
 /// Bounds is the box around a placed shape (a huge one for a plane).
-public func Bounds(_ s: Shape, _ t: geom.Transform) -> geom.AABB {
+public func Bounds(s: Shape, t: geom.Transform) -> geom.AABB {
     switch s {
     case .sphere(let r):
         return geom.AABB(center: t.Position, size: geom.Vec3(splat: r * 2))
@@ -144,7 +144,7 @@ public func Bounds(_ s: Shape, _ t: geom.Transform) -> geom.AABB {
 
 /// Inertia is the inertia of a solid shape of mass m about its
 /// center, along its own axes (the diagonal of its inertia tensor).
-public func Inertia(_ s: Shape, mass m: float32) -> geom.Vec3 {
+public func Inertia(s: Shape, mass m: float32) -> geom.Vec3 {
     switch s {
     case .sphere(let r):
         return geom.Vec3(splat: 0.4 * m * r * r)
@@ -167,7 +167,7 @@ public func Inertia(_ s: Shape, mass m: float32) -> geom.Vec3 {
 /// Raycast is where a ray first meets a placed shape, as the distance
 /// along its (unit) direction and the surface normal there; nil when it
 /// misses within maxDistance or starts inside.
-public func Raycast(_ s: Shape, _ t: geom.Transform, origin: geom.Vec3, direction: geom.Vec3,
+public func Raycast(s: Shape, t: geom.Transform, origin: geom.Vec3, direction: geom.Vec3,
                     maxDistance: float32) -> (distance: float32, normal: geom.Vec3)? {
     // In the shape's space.
     let inv = t.Rotation.Conjugate()
@@ -223,7 +223,7 @@ public func Raycast(_ s: Shape, _ t: geom.Transform, origin: geom.Vec3, directio
 
 // segment is a sphere or capsule as its core segment and radius, in the
 // world (a sphere's segment is a point; a box's isn't used).
-func segment(_ s: Shape, _ t: geom.Transform) -> (geom.Vec3, geom.Vec3, float32) {
+func segment(s: Shape, t: geom.Transform) -> (geom.Vec3, geom.Vec3, float32) {
     switch s {
     case .sphere(let r):
         return (t.Position, t.Position, r)
@@ -235,7 +235,7 @@ func segment(_ s: Shape, _ t: geom.Transform) -> (geom.Vec3, geom.Vec3, float32)
     }
 }
 
-func flip(_ cs: [Contact]) -> [Contact] {
+func flip(cs: [Contact]) -> [Contact] {
     var out: [Contact] = []
     for c in cs { out.append(Contact(PointA: c.PointB, PointB: c.PointA, Normal: -c.Normal, Depth: c.Depth)) }
     return out
@@ -243,11 +243,11 @@ func flip(_ cs: [Contact]) -> [Contact] {
 
 // againstPlane is a shape against the half-space below the plane's local
 // Y = 0. The normal points into the plane (from the shape to it).
-func againstPlane(_ s: Shape, _ ts: geom.Transform, _ tp: geom.Transform, _ margin: float32) -> [Contact] {
+func againstPlane(s: Shape, ts: geom.Transform, tp: geom.Transform, margin: float32) -> [Contact] {
     let up = tp.Rotation.Rotate(geom.Vec3.UnitY)
     let d0 = up.Dot(tp.Position)
     var out: [Contact] = []
-    func test(_ p: geom.Vec3, _ r: float32) {
+    func test(p: geom.Vec3, r: float32) {
         let h = up.Dot(p) - d0 - r
         if h <= margin {
             let deepest = p - up * r
@@ -276,9 +276,9 @@ func againstPlane(_ s: Shape, _ ts: geom.Transform, _ tp: geom.Transform, _ marg
 // point tested (a sphere's center, a capsule's ends and middle, a box's
 // corners) meets the ground as the plane under it facing the field's
 // normal. Normals point into the ground (from the shape to it).
-func againstGround(_ s: Shape, _ ts: geom.Transform, _ f: height.Field, _ offset: geom.Vec3, _ margin: float32) -> [Contact] {
+func againstGround(s: Shape, ts: geom.Transform, f: height.Field, offset: geom.Vec3, margin: float32) -> [Contact] {
     var out: [Contact] = []
-    func test(_ p: geom.Vec3, _ r: float32) {
+    func test(p: geom.Vec3, r: float32) {
         let x = p.X - offset.X, z = p.Z - offset.Z
         if !f.Contains(x, z) { return }
         let ground = geom.Vec3(p.X, f.Sample(x, z) + offset.Y, p.Z)
@@ -311,7 +311,7 @@ func againstGround(_ s: Shape, _ ts: geom.Transform, _ f: height.Field, _ offset
 
 // segmentBox is a sphere or capsule (segment p–q, radius r) against a box
 // of half extents he placed by tb.
-func segmentBox(_ p: geom.Vec3, _ q: geom.Vec3, _ r: float32, _ he: geom.Vec3, _ tb: geom.Transform, _ margin: float32) -> Contact? {
+func segmentBox(p: geom.Vec3, q: geom.Vec3, r: float32, he: geom.Vec3, tb: geom.Transform, margin: float32) -> Contact? {
     let inv = tb.Inverse()
     let a = inv.Point(p), b = inv.Point(q)
     let box = geom.AABB(min: -he, max: he)
@@ -349,7 +349,7 @@ func segmentBox(_ p: geom.Vec3, _ q: geom.Vec3, _ r: float32, _ he: geom.Vec3, _
     return Contact(PointA: tb.Point(pa), PointB: tb.Point(onBox), Normal: tb.Rotation.Rotate(n), Depth: math.Max(depth, 0))
 }
 
-func raySphere(_ o: geom.Vec3, _ d: geom.Vec3, _ c: geom.Vec3, _ r: float32) -> float32? {
+func raySphere(o: geom.Vec3, d: geom.Vec3, c: geom.Vec3, r: float32) -> float32? {
     let m = o - c
     let b = m.Dot(d), cc = m.Dot(m) - r * r
     if cc > 0 && b > 0 { return nil }

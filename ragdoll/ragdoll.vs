@@ -33,7 +33,7 @@ public struct Part {
     public var HingeMin: float32
     public var HingeMax: float32
 
-    public init(_ name: string, bone: int, parent: int, shape: collide.Shape, mass: float32,
+    public init(name: string, bone: int, parent: int, shape: collide.Shape, mass: float32,
                 offset: geom.Transform = geom.Transform.Identity, joint: physics.JointKind = .ball,
                 frame: geom.Quat = geom.Quat.Identity, limits: physics.Limits? = nil,
                 hingeMin: float32 = 0, hingeMax: float32 = 0) {
@@ -67,7 +67,7 @@ public final class Ragdoll {
     /// placements, indexed as the parts' Bone). Bodies that overlap there
     /// (an upper arm and the chest) don't collide with each other; the
     /// rest do, so limbs don't pass through the body.
-    public init(_ world: physics.World, parts: [Part], rest: [geom.Transform], group: uint32 = 2, mask: uint32 = 0xFFFFFFFF) {
+    public init(world: physics.World, parts: [Part], rest: [geom.Transform], group: uint32 = 2, mask: uint32 = 0xFFFFFFFF) {
         self.world = world
         Parts = parts
         var bodies: [physics.Body] = []
@@ -113,7 +113,7 @@ public final class Ragdoll {
     public var Root: physics.Body { return Bodies[0] }
 
     /// Match puts the bodies where the bones are, still.
-    public func Match(_ bones: [geom.Transform]) {
+    public func Match(bones: [geom.Transform]) {
         for (i, p) in Parts.enumerated() {
             Bodies[i].Transform = bones[p.Bone] * p.Offset
             Bodies[i].Velocity = geom.Vec3.Zero
@@ -124,7 +124,7 @@ public final class Ragdoll {
     /// Activate makes the ragdoll take over from the animation: the bodies
     /// start where the bones are, moving as they were moving between
     /// `previous` and `bones` over dt seconds.
-    public func Activate(_ bones: [geom.Transform], previous: [geom.Transform], dt: float32) {
+    public func Activate(bones: [geom.Transform], previous: [geom.Transform], dt: float32) {
         for (i, p) in Parts.enumerated() {
             let now = bones[p.Bone] * p.Offset
             let then = previous[p.Bone] * p.Offset
@@ -149,14 +149,14 @@ public final class Ragdoll {
 
     /// Bones writes where the parts have put their bones (world
     /// placements) into `bones`; bones without a part are left alone.
-    public func Bones(_ bones: inout [geom.Transform]) {
+    public func Bones(bones: inout [geom.Transform]) {
         for (i, p) in Parts.enumerated() {
             bones[p.Bone] = Bodies[i].Transform * p.Offset.Inverse()
         }
     }
 
     /// Push gives the part nearest `at` an impulse (kg·m/s).
-    public func Push(_ impulse: geom.Vec3, at point: geom.Vec3) {
+    public func Push(impulse: geom.Vec3, at point: geom.Vec3) {
         var best = 0
         var d: float32 = 1e30
         for (i, b) in Bodies.enumerated() {
@@ -175,12 +175,12 @@ public final class Ragdoll {
 
     /// Update counts how long the ragdoll has been still (every part
     /// slower than `speed`); call it once a frame after the world steps.
-    public func Update(_ dt: float32, still speed: float32 = 0.25) {
+    public func Update(dt: float32, still speed: float32 = 0.25) {
         StillFor = Active && Speed < speed ? StillFor + dt : 0
     }
 }
 
-func angularVelocity(_ dq: geom.Quat, _ dt: float32) -> geom.Vec3 {
+func angularVelocity(dq: geom.Quat, dt: float32) -> geom.Vec3 {
     let s: float32 = dq.W < 0 ? -1 : 1
     let v = geom.Vec3(dq.X * s, dq.Y * s, dq.Z * s)
     let l = v.Length()

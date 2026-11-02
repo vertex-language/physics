@@ -26,7 +26,7 @@ public final class World {
 
     /// Add puts a body in the world.
     @discardableResult
-    public func Add(_ b: Body) -> Body {
+    public func Add(b: Body) -> Body {
         b.index = Bodies.count
         Bodies.append(b)
         return b
@@ -35,14 +35,14 @@ public final class World {
     /// Add puts a joint in the world; its bodies stop colliding with each
     /// other unless the joint says otherwise.
     @discardableResult
-    public func Add(_ j: Joint) -> Joint {
+    public func Add(j: Joint) -> Joint {
         Joints.append(j)
         if !j.Collide { Ignore(j.A, j.B) }
         return j
     }
 
     /// Remove takes a body and its joints out of the world.
-    public func Remove(_ b: Body) {
+    public func Remove(b: Body) {
         Bodies = Bodies.filter { $0 !== b }
         Joints = Joints.filter { $0.A !== b && $0.B !== b }
         for (i, x) in Bodies.enumerated() { x.index = i }
@@ -51,17 +51,17 @@ public final class World {
     }
 
     /// Ignore stops two bodies colliding with each other.
-    public func Ignore(_ a: Body, _ b: Body) {
+    public func Ignore(a: Body, b: Body) {
         ignored[pairKey(a, b)] = true
     }
 
-    func pairKey(_ a: Body, _ b: Body) -> int64 {
+    func pairKey(a: Body, b: Body) -> int64 {
         let x = int64(min(a.index, b.index)), y = int64(max(a.index, b.index))
         return x << 32 | y
     }
 
     /// Step advances the world by dt seconds.
-    public func Step(_ dt: float32) {
+    public func Step(dt: float32) {
         if dt <= 0 { return }
         let n = max(1, Substeps)
         let h = dt / float32(n)
@@ -126,7 +126,7 @@ public final class World {
 
     // candidates is the pairs of bodies that may touch this step: bounds
     // grown by how far they could move, overlapping, filters passing.
-    func candidates(_ live: [Body], _ dt: float32) -> [(Body, Body)] {
+    func candidates(live: [Body], dt: float32) -> [(Body, Body)] {
         var bounds: [geom.AABB] = []
         for b in live {
             let reach = b.Velocity.Length() * dt + Margin + 0.01
@@ -147,7 +147,7 @@ public final class World {
         return out
     }
 
-    func solveContact(_ c: inout contact, _ h: float32) {
+    func solveContact(c: inout contact, h: float32) {
         let a = c.a, b = c.b
         let ra = a.Rotation.Rotate(c.localA), rb = b.Rotation.Rotate(c.localB)
         let pa = a.Position + ra, pb = b.Position + rb
@@ -167,7 +167,7 @@ public final class World {
         }
     }
 
-    func contactVelocity(_ c: contact, _ h: float32) {
+    func contactVelocity(c: contact, h: float32) {
         if c.lambda <= 0 { return }
         let a = c.a, b = c.b
         let ra = a.Rotation.Rotate(c.localA), rb = b.Rotation.Rotate(c.localB)
